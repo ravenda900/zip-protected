@@ -2,6 +2,8 @@
 require __DIR__ . '/vendor/autoload.php';
 
 define('ATTACHMENTS_DIR', './attachments', true);
+define('ZIP_PASSWORD', 'sproutinsight', true);
+define('SPREADSHEETS_FOLDER_ID', '1ZtQXr77vHL2Z7AlHPoc-a_Zv_7pq008f', true);
 
 if (isset($_GET['code'])) {
     echo '<div>';
@@ -17,6 +19,7 @@ if (php_sapi_name() != 'cli') {
 $client = getClient();
 $sheetsService = new Google_Service_Sheets($client);
 $gmailService = new Google_Service_Gmail($client);
+$driveService = new Google_Service_Drive($client);
 
 /**
  * Returns an authorized API client.
@@ -26,7 +29,7 @@ function getClient()
 {
     $client = new Google_Client();
     $client->setApplicationName('Google Sheets API PHP Quickstart');
-    $client->setScopes([Google_Service_Sheets::SPREADSHEETS, Google_Service_Gmail::GMAIL_READONLY]);
+    $client->setScopes([Google_Service_Sheets::SPREADSHEETS, Google_Service_Gmail::MAIL_GOOGLE_COM, Google_Service_Drive::DRIVE]);
     $client->setAuthConfig('credentials.json');
     $client->setAccessType('offline');
     $client->setPrompt('select_account consent');
@@ -106,7 +109,7 @@ function deleteAll($str) {
     }
 }
 
-function readZip($sheetsService) {
+function readZip($sheetsService, $driveService) {
     $zip = new ZipArchive();
     $folder = time();
 
@@ -114,8 +117,8 @@ function readZip($sheetsService) {
 
     foreach ($zipFiles as $zipFile) {
         if ($zip->open($zipFile) === true) {
-            $zip->setPassword('sproutinsight');
-            $zipDest = './' . $folder;
+            $zip->setPassword(ZIP_PASSWORD);
+            $zipDest = './zip' . $folder;
             $zip->extractTo($zipDest);
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $row = 1;
@@ -144,7 +147,7 @@ function readZip($sheetsService) {
                         'fields' => 'spreadsheetId'
                     ]);
 
-                    $body = new Google_Service_Sheets_ValueRange([
+                    $body = new Google_Service_Sheets s_ValueRange([
                         'values' => $values
                     ]);
 
@@ -164,7 +167,7 @@ function readZip($sheetsService) {
 }
 
 function getGmailAttachments ($gmailService) {
-    $optParams['q'] = 'From:james@startsmartsourcing.com';
+    $optParams['q'] = 'From:james@startsmartsourcing.com,Subject:Test';
     $msgConf = $gmailService->users_messages->listUsersMessages('me', $optParams);
     $messages = $msgConf->getMessages();
     $files = [];
@@ -190,4 +193,4 @@ function getGmailAttachments ($gmailService) {
     }
 }
 getGmailAttachments($gmailService);
-readZip($sheetsService);
+readZip($sheetsService, $driveService);
