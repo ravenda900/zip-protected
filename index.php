@@ -118,7 +118,7 @@ function readZip($sheetsService, $driveService) {
     foreach ($zipFiles as $zipFile) {
         if ($zip->open($zipFile) === true) {
             $zip->setPassword(ZIP_PASSWORD);
-            $zipDest = './zip' . $folder;
+            $zipDest = './' . $folder;
             $zip->extractTo($zipDest);
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $row = 1;
@@ -147,7 +147,7 @@ function readZip($sheetsService, $driveService) {
                         'fields' => 'spreadsheetId'
                     ]);
 
-                    $body = new Google_Service_Sheets s_ValueRange([
+                    $body = new Google_Service_Sheets_ValueRange([
                         'values' => $values
                     ]);
 
